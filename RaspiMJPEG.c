@@ -86,7 +86,6 @@ unsigned char timelapse=0, mp4box=0, running=1, autostart=1, quality=85, idle=0,
 int time_between_pic;
 time_t currTime;
 struct tm *localTime;
-short verbose = 0;
 
 void cam_set_annotation();
   
@@ -439,7 +438,6 @@ void cam_set_annotation () {
 }
 
 void start_all (void) {
-  if (verbose) printf("Autostart...\n");
 
   MMAL_ES_FORMAT_T *format;
   int max, i;
@@ -737,27 +735,18 @@ int main (int argc, char* argv[]) {
   char readbuf[60];
   char *filename_temp, *filename_recording, *cmd_temp, *line = NULL;
   FILE *fp;
-  char cfg_path[256] = "/etc/raspimjpeg";
 
   bcm_host_init();
   
   //
   // read arguments
   //
-
   for(i=1; i<argc; i++) {
     if(strcmp(argv[i], "--version") == 0) {
       printf("RaspiMJPEG Version ");
       printf(VERSION);
       printf("\n");
       exit(0);
-    }
-    else if(strcmp(argv[i], "--config") == 0) {
-      i++;
-      strcpy(cfg_path,argv[i]);
-    }
-    else if(strcmp(argv[i], "-v") == 0) {
-	verbose = 1;
     }
     else if(strcmp(argv[i], "-ic") == 0) {
       i++;
@@ -770,24 +759,14 @@ int main (int argc, char* argv[]) {
     else if(strcmp(argv[i], "-md") == 0) {
       motion_detection = 1;
     }
-    else {
-	printf("Supported arguments: \n");
-	printf("--config [PATH]\n");
-	printf("-ic [count]\n");
-	printf("-vc [count]\n");
-	printf("-md\n");
-	printf("-v\n");
-	error("Invalid arguments");
-    }
+    else error("Invalid arguments");
   }
 
   //
   // read config file
   //
-  if (verbose) printf("Reading config: %s\n",cfg_path);
-  fp = fopen(cfg_path, "r");
+  fp = fopen("/etc/raspimjpeg", "r");
   if(fp != NULL) {
-	if (verbose) printf("Config opened\n");
     unsigned int len = 0;
     while((length = getline(&line, &len, fp)) != -1) {
       line[length-1] = 0;
@@ -938,9 +917,8 @@ int main (int argc, char* argv[]) {
  
     }
     if(line) free(line);
-  } else error("Error opening config file! Have you specified --config option?");
+  }
   
-  if (verbose) printf("Reading config - DONE\n");
   //
   // init
   //
